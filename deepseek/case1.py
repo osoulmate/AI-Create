@@ -15,16 +15,48 @@ import json
 import hashlib
 import inspect
 import re
+import shutil
+import dashscope
 from langchain.agents import initialize_agent, Tool, AgentType
 from langchain_core.prompts import PromptTemplate
 from langchain.chains import LLMChain
-import dashscope
 from typing import Any, Dict, List, Mapping, Optional, Tuple, Callable
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models.llms import LLM
 from litellm import completion
+
 assert os.environ['DEEPSEEK_API_KEY'], "请先在环境变量里设置 DEEPSEEK_API_KEY"
 
+def print_divider(char='-', color=None, title=None):
+    """
+    生成带样式的分割线
+
+    参数:
+        char: 分割字符
+        color: 颜色代码（如 '\033[91m' 红色）
+        title: 居中显示的标题
+    """
+    width = shutil.get_terminal_size().columns
+
+    if title:
+        # 计算标题两侧字符数
+        title_len = len(title)
+        side_chars = (width - title_len - 2) // 2  # 2个空格
+        line = f"{char * side_chars} {title} {char * side_chars}"
+
+        # 处理奇数宽度
+        if len(line) < width:
+            line += char
+    else:
+        line = char * width
+
+    if color:
+        line = f"{color}{line}\033[0m"
+
+    print(line)
+
+# 使用示例
+#print_divider('=', title="重要提示")
 class MyLLM(LLM):
     """LangChain 包装 DeepSeek 模型（官方 deepseek 包）"""
     model_name: str = "deepseek/deepseek-reasoner"
@@ -527,10 +559,11 @@ if __name__ == "__main__":
             kwargs = {"host": "192.168.1.1", "port": 22,"username":"root","password":"","key_path":key_path,"cmd":"ls -al;ls -al /home"}
             if tool_name:
                 out = tool_creator.tool_manager.use_dynamic_tool(tool_name, *args,**kwargs)
+                print_divider('-', color='\033[91m')  # 红色分割线
                 print(f"{result}回答: \n{out}")
             else:
                 print(f"tool_name:{tool_name},result:{result}")
-        print("-" * 50)
+        print_divider('-', color='\033[92m')  # 绿色分割线
 
     # 显示当前所有自动创建的工具
     print("\n当前所有AI自动创建的工具:")
